@@ -1,0 +1,8 @@
+[
+  { "aluno": "Marina Lopes", "tipo": "prova", "descricao": "Prova bimestral de Matemática", "data": "2026-03-18", "nota": 6.5 },
+  { "aluno": "Marina Lopes", "tipo": "atividade", "descricao": "Lista de frações", "data": "2026-03-05", "nota": 8 },
+  { "aluno": "Marina Lopes", "tipo": "falta", "data": "2026-03-10" },
+  { "aluno": "Marina Lopes", "tipo": "entrega", "descricao": "Lista de frações", "data": "2026-03-06", "prazo": "2026-03-05" },
+  { "aluno": "Otávio Ramos", "tipo": "prova", "descricao": "Prova bimestral de Matemática", "data": "2026-03-18", "nota": 4 },
+  { "aluno": "Otávio Ramos", "tipo": "entrega", "descricao": "Lista de frações", "prazo": "2026-03-05" }
+]
