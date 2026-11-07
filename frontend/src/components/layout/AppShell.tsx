@@ -24,20 +24,21 @@ export function AppShell({ userName, onLogout, children }: AppShellProps) {
     <div>
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
-          <span className="font-semibold">Risco de Evasão</span>
-          <nav className="flex flex-wrap gap-3 text-sm">
+          <nav className="flex flex-wrap gap-3 text-sm rounded-3xl space-x-2">
             {LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={pathname === link.href ? "font-semibold underline" : "text-slate-600 hover:underline"}
-              >
-                {link.label}
-              </Link>
+                <Link
+                  key={link.href} 
+                  href={link.href}
+                  className={`cursor-pointer transition-colors ease-in-out duration-300 p-2 border rounded-[15px]
+                    ${link.href === pathname ? "bg-primary border-transparent" : "bg-white border-slate-300 hover:bg-primary-200"}
+                    ${pathname === link.href && "text-white"}`}
+                >
+                  {link.label}
+                </Link>
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3 text-sm">
-            <span className="text-slate-600">{userName}</span>
+            <span className="text-slate-600">Olá, {userName}!</span>
             <Button variant="secondary" onClick={onLogout}>
               Sair
             </Button>

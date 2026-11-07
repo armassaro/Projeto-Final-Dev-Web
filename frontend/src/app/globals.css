@@ -12,3 +12,26 @@ html {
   font-weight: 600;
   font-style: normal; */
 }
+
+button, select {
+  cursor: pointer;
+}
+
+button, input, section, select { 
+  border-radius: 15px;
+}
+
+@theme {
+  --color-primary-50: #eeeeff;
+  --color-primary-100: #dfe0ff;
+  --color-primary-200: #c5c6ff;
+  --color-primary-300: #a2a3ff;
+  --color-primary-400: #7d7dfa;
+  --color-primary-500: #5a5af0;
+  --color-primary-600: #3c3cdc;
+  --color-primary-700: #2323b8;
+  --color-primary-800: #10109a;
+  --color-primary-900: #000080;
+  --color-primary-950: #00004d;
+  --color-primary: var(--color-primary-900);
+}

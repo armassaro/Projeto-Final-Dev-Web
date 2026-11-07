@@ -5,8 +5,8 @@ import { DataProvider } from "@/contexts/DataContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Risco de Evasão",
-  description: "Acompanhamento do risco de evasão escolar para professores.",
+  title: "Inteligência contra evasão escolar",
+  description: "Acompanhamento do Inteligência contra evasão escolar escolar para professores.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

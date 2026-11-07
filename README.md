@@ -1,6 +1,6 @@
-# Risco de Evasão
+# Inteligência contra evasão escolar
 
-Sistema web para professores do ensino fundamental e médio acompanharem o risco de evasão dos alunos.
+Sistema web para professores do ensino fundamental e médio acompanharem o Inteligência contra evasão escolar dos alunos.
 
 ## Dupla
 
@@ -9,7 +9,7 @@ Sistema web para professores do ensino fundamental e médio acompanharem o risco
 
 ## Descrição do sistema
 
-**Problema:** cálculo de risco de evasão considerando faltas, notas e entregas, para sugerir ações com base nos dados.
+**Problema:** cálculo de Inteligência contra evasão escolar considerando faltas, notas e entregas, para sugerir ações com base nos dados.
 
 **Sistema proposto:** uma base que unifica notas de atividades e provas, faltas, datas de entrega e renda familiar. Os dados são analisados por um modelo de tomada de decisão de baixo custo, com possibilidade de importar dados de outros períodos, para classificar o risco do aluno como baixo, médio ou alto. O risco é recalculado a cada nova nota e considera principalmente o histórico do último semestre. O professor também pode adicionar observações que afetam o cálculo.
 

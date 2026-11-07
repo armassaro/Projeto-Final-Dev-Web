@@ -5,7 +5,7 @@ export function RiskSummary({ risk }: { risk: RiskAssessment }) {
   return (
     <div className="space-y-2 text-sm">
       <p className="flex items-center gap-2">
-        <span className="font-medium">Risco de evasão:</span>
+        <span className="font-medium">Inteligência contra evasão escolar:</span>
         <RiskBadge level={risk.level} />
         {risk.level !== "sem_dados" && <span className="text-slate-500">{risk.score}/100</span>}
       </p>

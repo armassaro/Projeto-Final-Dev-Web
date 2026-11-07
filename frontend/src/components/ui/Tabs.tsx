@@ -16,13 +16,9 @@ export function Tabs<T extends string>({ tabs, active, onChange }: TabsProps<T>)
           role="tab"
           aria-selected={tab.value === active}
           onClick={() => onChange(tab.value)}
-          className={`-mb-px border-b-2 px-3 py-2 text-sm ${
-            tab.value === active
-              ? "border-slate-800 font-semibold"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
+          className={`-mb-px px-3 py-2 text-sm relative`}>
           {tab.label}
+          <div className={`transition-discrete ease-in-out duration-300 h-0.5 bg-primary ${tab.value === active ? "w-[100%]" : "w-0"}`}/>
         </button>
       ))}
     </div>
