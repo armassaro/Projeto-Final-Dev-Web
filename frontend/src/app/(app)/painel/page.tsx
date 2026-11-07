@@ -17,14 +17,22 @@ import type { RiskLevel, StudentWithRisk } from "@/types";
 const LEVEL_ORDER: Record<RiskLevel, number> = { alto: 0, medio: 1, baixo: 2, sem_dados: 3 };
 
 const COLUMNS: Column<StudentWithRisk>[] = [
-  { header: "Aluno", render: (student) => student.name },
-  { header: "Turma", render: (student) => student.classroomName },
+  { header: "Aluno", render: (student) => student.name, sortValue: (student) => student.name },
+  {
+    header: "Turma",
+    render: (student) => student.classroomName,
+    sortValue: (student) => student.classroomName,
+  },
   {
     header: "Média",
     render: (student) => (student.risk.average === null ? "-" : formatGrade(student.risk.average)),
+    sortValue: (student) => student.risk.average,
   },
-  { header: "Risco", render: (student) => <RiskBadge level={student.risk.level} /> },
-  { header: "Ação sugerida", render: (student) => student.risk.suggestion },
+  {
+    header: "Risco",
+    render: (student) => <RiskBadge level={student.risk.level} />,
+    sortValue: (student) => LEVEL_ORDER[student.risk.level],
+  },
 ];
 
 const LEVEL_OPTIONS = [
