@@ -1,19 +1,11 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from pydantic.alias_generators import to_camel
+from pydantic import Field, field_validator
+
+from .base import CamelModel
 
 ObservationImpact = Literal["nenhum", "aumenta", "reduz"]
 RiskLevel = Literal["baixo", "medio", "alto", "sem_dados"]
-
-
-class CamelModel(BaseModel):
-    """Serializa em camelCase para casar com os tipos do frontend."""
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=True,
-        from_attributes=True,
-    )
 
 
 class StudentBase(CamelModel):
