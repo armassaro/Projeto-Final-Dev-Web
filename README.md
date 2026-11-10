@@ -15,9 +15,13 @@ Sistema web para professores do ensino fundamental e médio acompanharem o Intel
 
 **Público-alvo:** professores do ensino fundamental e médio.
 
-## Estado atual: Sprint 1
+## Estado atual: Sprint 2 (em andamento)
 
-Apenas o frontend está implementado, com dados mockados salvos no `localStorage` do navegador. O login é simulado e o cálculo de risco em `frontend/src/services/risk.ts` é uma regra provisória, que será substituída pelo modelo de IA na Sprint 2.
+O projeto tem duas partes:
+
+- **Frontend** (`frontend/`): Next.js com dados mockados salvos no `localStorage` do navegador. O login é simulado e o cálculo de risco em `frontend/src/services/risk.ts` ainda é uma regra provisória. O frontend ainda não consome a API.
+- **Backend** (`backend/`): API em FastAPI com cadastro e login de professores, turmas, alunos, lançamentos (notas, faltas e entregas) e importação de dados de outros períodos. Os dados ficam em memória e voltam ao estado inicial sempre que a API reinicia; ao iniciar, ela carrega as mesmas turmas, alunos e lançamentos do frontend.
+- **Modelo de IA**: já existe um cliente para a API do Jev (`backend/services/`), que vai substituir a regra provisória de risco e informar a confiança da classificação. Ele ainda não está ligado às rotas.
 
 ## Telas
 
@@ -26,9 +30,42 @@ Apenas o frontend está implementado, com dados mockados salvos no `localStorage
 - `/lancamentos`: notas, faltas e entregas
 - `/painel`: risco por aluno, filtros e detalhes
 
-Conta de demonstração: `helena@escola.edu.br` / `senha123`. Um arquivo de exemplo para importação está em `frontend/public/exemplo-importacao.json`.
+Conta de demonstração (frontend e API): `helena@escola.edu.br` / `senha123`. Um arquivo de exemplo para importação está em `frontend/public/exemplo-importacao.json`.
 
 ## Como executar
+
+### Backend
+
+Requer Python 3.10 ou superior. Os comandos abaixo são executados dentro da pasta `backend/`.
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate      # Linux/macOS
+.venv\Scripts\activate         # Windows
+pip install -r requirements.txt
+cp .env.example .env           # opcional: só se for mudar algum valor
+uvicorn main:app --reload
+```
+
+A API fica em http://localhost:8000 e a documentação interativa em http://localhost:8000/docs.
+
+#### Variáveis de ambiente
+
+Sem o arquivo `.env`, os valores padrão são usados.
+
+| Variável | Descrição | Padrão |
+|---|---|---|
+| `CORS_ORIGINS` | Endereços do frontend que podem acessar a API, separados por vírgula | `http://localhost:3000` |
+| `TYPESAFE_API_KEY` | Chave da API do Jev (modelo de risco) | vazio |
+| `TYPESAFE_BASE_URL` | URL da API do Jev (precisa ser HTTPS) | `https://api.typesafe.ai` |
+| `TYPESAFE_MODEL` | Modelo usado | `jev-latest` |
+| `TYPESAFE_TIMEOUT_SECONDS` | Tempo limite de cada requisição | `15` |
+| `TYPESAFE_MAX_RETRIES` | Novas tentativas em caso de falha temporária | `2` |
+
+Rotas, estrutura de pastas e mais detalhes estão em [`backend/README.md`](backend/README.md).
+
+### Frontend
 
 Requer Node.js 20.9 ou superior.
 
@@ -40,7 +77,7 @@ npm run dev
 
 Acesse http://localhost:3000.
 
-## Versão estática
+#### Versão estática
 
 ```bash
 cd frontend

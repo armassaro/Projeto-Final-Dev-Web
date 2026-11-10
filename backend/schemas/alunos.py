@@ -55,6 +55,7 @@ class RiskAssessment(CamelModel):
     average: float | None = None
     reasons: list[str]
     suggestion: str
+    confidence: float | None = Field(default=None, ge=0, le=1)
 
 
 class StudentWithRisk(StudentRead):

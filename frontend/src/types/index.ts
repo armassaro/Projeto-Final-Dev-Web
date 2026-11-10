@@ -71,6 +71,7 @@ export type RiskAssessment = {
   average: number | null;
   reasons: string[];
   suggestion: string;
+  confidence?: number | null;
 };
 
 export type StudentWithRisk = Student & {

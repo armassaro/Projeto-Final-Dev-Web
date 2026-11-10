@@ -1,0 +1,72 @@
+[
+  {
+    "id": "exemplo-lucas",
+    "name": "Lucas Ferreira",
+    "classroomId": "exemplo-9a",
+    "familyIncome": 1400,
+    "observations": "Começou a trabalhar à tarde para ajudar em casa e tem chegado cansado.",
+    "observationImpact": "aumenta",
+    "records": {
+      "grades": [
+        { "id": "n1", "studentId": "exemplo-lucas", "type": "prova", "description": "Prova 1 - Matemática", "value": 4.0, "date": "2026-08-20" },
+        { "id": "n2", "studentId": "exemplo-lucas", "type": "atividade", "description": "Lista de exercícios 3", "value": 3.5, "date": "2026-09-10" },
+        { "id": "n3", "studentId": "exemplo-lucas", "type": "prova", "description": "Prova 2 - Matemática", "value": 2.5, "date": "2026-10-15" }
+      ],
+      "absences": [
+        { "id": "f1", "studentId": "exemplo-lucas", "date": "2026-09-22" },
+        { "id": "f2", "studentId": "exemplo-lucas", "date": "2026-09-29" },
+        { "id": "f3", "studentId": "exemplo-lucas", "date": "2026-10-06" },
+        { "id": "f4", "studentId": "exemplo-lucas", "date": "2026-10-13" },
+        { "id": "f5", "studentId": "exemplo-lucas", "date": "2026-10-20" },
+        { "id": "f6", "studentId": "exemplo-lucas", "date": "2026-10-27" }
+      ],
+      "deliveries": [
+        { "id": "e1", "studentId": "exemplo-lucas", "description": "Trabalho de Ciências", "dueDate": "2026-09-15", "deliveredAt": "2026-09-22" },
+        { "id": "e2", "studentId": "exemplo-lucas", "description": "Redação dissertativa", "dueDate": "2026-10-10", "deliveredAt": null }
+      ]
+    }
+  },
+  {
+    "id": "exemplo-mariana",
+    "name": "Mariana Souza",
+    "classroomId": "exemplo-9a",
+    "familyIncome": 2600,
+    "observations": "Notas caíram após mudança de bairro; pais acompanham.",
+    "observationImpact": "nenhum",
+    "records": {
+      "grades": [
+        { "id": "n4", "studentId": "exemplo-mariana", "type": "prova", "description": "Prova 1 - Matemática", "value": 7.5, "date": "2026-08-20" },
+        { "id": "n5", "studentId": "exemplo-mariana", "type": "atividade", "description": "Lista de exercícios 3", "value": 6.0, "date": "2026-09-10" },
+        { "id": "n6", "studentId": "exemplo-mariana", "type": "prova", "description": "Prova 2 - Matemática", "value": 5.0, "date": "2026-10-15" }
+      ],
+      "absences": [
+        { "id": "f7", "studentId": "exemplo-mariana", "date": "2026-09-30" },
+        { "id": "f8", "studentId": "exemplo-mariana", "date": "2026-10-21" }
+      ],
+      "deliveries": [
+        { "id": "e3", "studentId": "exemplo-mariana", "description": "Trabalho de Ciências", "dueDate": "2026-09-15", "deliveredAt": "2026-09-15" },
+        { "id": "e4", "studentId": "exemplo-mariana", "description": "Redação dissertativa", "dueDate": "2026-10-10", "deliveredAt": "2026-10-12" }
+      ]
+    }
+  },
+  {
+    "id": "exemplo-beatriz",
+    "name": "Beatriz Almeida",
+    "classroomId": "exemplo-9a",
+    "familyIncome": 5200,
+    "observations": "Participa das aulas e ajuda os colegas.",
+    "observationImpact": "reduz",
+    "records": {
+      "grades": [
+        { "id": "n7", "studentId": "exemplo-beatriz", "type": "prova", "description": "Prova 1 - Matemática", "value": 9.0, "date": "2026-08-20" },
+        { "id": "n8", "studentId": "exemplo-beatriz", "type": "atividade", "description": "Lista de exercícios 3", "value": 9.5, "date": "2026-09-10" },
+        { "id": "n9", "studentId": "exemplo-beatriz", "type": "prova", "description": "Prova 2 - Matemática", "value": 8.5, "date": "2026-10-15" }
+      ],
+      "absences": [],
+      "deliveries": [
+        { "id": "e5", "studentId": "exemplo-beatriz", "description": "Trabalho de Ciências", "dueDate": "2026-09-15", "deliveredAt": "2026-09-14" },
+        { "id": "e6", "studentId": "exemplo-beatriz", "description": "Redação dissertativa", "dueDate": "2026-10-10", "deliveredAt": "2026-10-09" }
+      ]
+    }
+  }
+]

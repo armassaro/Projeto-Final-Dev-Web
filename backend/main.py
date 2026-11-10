@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import seed
 from config import CORS_ORIGINS
-from routers import alunos, auth, lancamentos, turmas
+from routers import alunos, auth, ia, lancamentos, turmas
 
 
 @asynccontextmanager
@@ -28,6 +28,7 @@ app.include_router(auth.router)
 app.include_router(turmas.router)
 app.include_router(alunos.router)
 app.include_router(lancamentos.router)
+app.include_router(ia.router)
 
 
 @app.get("/", tags=["Status"])
