@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
 from .base import CamelModel
 
@@ -27,6 +27,13 @@ class TeacherBase(CamelModel):
 class TeacherCreate(TeacherBase):
     password: str = Field(min_length=6, max_length=72)
 
+    @field_validator("password")
+    @classmethod
+    def password_fits_bcrypt(cls, value: str) -> str:
+        if len(value.encode()) > 72:
+            raise ValueError("A senha é longa demais.")
+        return value
+
 
 class TeacherRead(TeacherBase):
     id: str
@@ -41,7 +48,3 @@ class TeacherLogin(CamelModel):
     def normalize_email(cls, value: str) -> str:
         return value.strip().lower()
 
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
