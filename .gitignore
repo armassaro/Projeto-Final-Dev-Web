@@ -5,3 +5,6 @@ next-env.d.ts
 *.tsbuildinfo
 .env*
 .DS_Store
+.venv/
+!.env.example
+__pycache__/
