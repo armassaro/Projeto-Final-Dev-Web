@@ -2,6 +2,39 @@
 
 API em FastAPI que atende o frontend do sistema.
 
+## Visão geral da aplicação
+
+Sistema para professores do ensino fundamental e médio que estima o risco de evasão escolar de cada aluno (baixo, médio ou alto) a partir de notas, faltas, entregas, renda familiar e observações do professor.
+
+### Frontend (`frontend/`): Next.js, React, TypeScript e Tailwind
+
+- **Páginas** (`src/app/`):
+  - `login`: login e cadastro de professor.
+  - `turmas`: turmas e alunos.
+  - `lancamentos`: notas, faltas e entregas.
+  - `painel`: visão geral dos riscos.
+- **Componentes** (`src/components/`):
+  - `auth`: formulários de login e cadastro.
+  - `classrooms`: turmas.
+  - `students`: cadastro e detalhe do aluno, além da importação de dados de outros períodos.
+  - `records`: formulários de nota, falta e entrega.
+  - `risk`: selo, resumo e contadores de risco.
+  - `ui`: componentes genéricos.
+- **Estado** (`src/contexts/`): `AuthContext` cuida do login e `DataContext` dos dados escolares, salvos no `localStorage` do navegador. Os dados iniciais vêm de `src/data/mock.ts`.
+- **Cálculo de risco** (`src/services/risk.ts`): dá mais peso às notas do semestre atual e devolve uma sugestão de ação para cada nível de risco.
+- **Publicação**: o site é exportado como páginas estáticas, na pasta `out/`.
+
+### Backend (`backend/`): API em FastAPI com Python
+
+- **Rotas** (`routers/`): `auth` (cadastro e login de professor), `turmas` (turmas e importação de dados de outros períodos), `alunos` (cadastro e consulta de alunos), `lancamentos` (notas, faltas e entregas) e `ia` (avaliação de risco).
+- **Validação** (`schemas/`): confere os dados de entrada e saída. O schema de aluno guarda a confiança da resposta da IA.
+- **IA** (`services/`): a avaliação usa o modelo Jev, chamado pelo SDK `typesafe_sdk`. O modelo devolve um nível de 0 a 4 e indica quais fatores de risco estão presentes: notas baixas, faltas, atrasos, renda baixa ou observação do professor.
+- **Dados**: ficam em memória (`storage.py`) e são carregados a partir de `seed.py` quando a API inicia.
+
+### Publicação
+
+O `render.yaml` na raiz do repositório cria dois serviços no Render: a API em Python e o site estático. A chave da API do Jev é preenchida no painel do Render.
+
 ## Como executar
 
 Requer Python 3.10 ou superior. Os comandos abaixo são executados dentro da pasta `backend/`.
