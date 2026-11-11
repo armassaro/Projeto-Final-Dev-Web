@@ -1,0 +1,44 @@
+# Blueprint do Render: cria a API (FastAPI) e o site estático (Next.js) a partir deste repositório.
+# No painel do Render: New > Blueprint > selecione o repositório.
+
+services:
+  # API em FastAPI
+  - type: web
+    name: evasao-escolar-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      # Endereço público do frontend (ex.: https://evasao-escolar-web.onrender.com).
+      # Preenchido no painel na criação do Blueprint.
+      - key: CORS_ORIGINS
+        sync: false
+      # Chave da API do Jev. Nunca vai para o repositório: é pedida no painel.
+      - key: TYPESAFE_API_KEY
+        sync: false
+      - key: TYPESAFE_BASE_URL
+        value: https://api.typesafe.ai
+      - key: TYPESAFE_MODEL
+        value: jev-latest
+      - key: TYPESAFE_TIMEOUT_SECONDS
+        value: "15"
+      - key: TYPESAFE_MAX_RETRIES
+        value: "2"
+
+  # Frontend em Next.js exportado como site estático (pasta out/)
+  - type: web
+    name: evasao-escolar-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: out
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0

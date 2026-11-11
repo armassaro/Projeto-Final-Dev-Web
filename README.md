@@ -86,3 +86,21 @@ npm start
 ```
 
 O build gera a versão estática na pasta `frontend/out/`, que pode ser publicada em qualquer hospedagem de arquivos estáticos.
+
+## Hospedagem no Render
+
+O arquivo `render.yaml` na raiz cria os dois serviços de uma vez:
+
+- `evasao-escolar-api`: a API, com a documentação em `/docs`
+- `evasao-escolar-web`: o frontend como site estático
+
+Passos:
+
+1. Envie o repositório para o GitHub.
+2. No Render, clique em **New > Blueprint** e selecione o repositório.
+3. Preencha as variáveis pedidas no painel:
+   - `TYPESAFE_API_KEY`: chave da API do Jev
+   - `CORS_ORIGINS`: endereço do frontend, por exemplo `https://evasao-escolar-web.onrender.com`
+4. Confirme a criação. A cada `push` na `main`, os dois serviços são atualizados.
+
+No plano gratuito, a API "dorme" depois de 15 minutos sem uso e demora cerca de 1 minuto para responder à primeira requisição. Como os dados ficam em memória, eles voltam ao estado inicial sempre que ela reinicia.
