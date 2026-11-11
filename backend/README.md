@@ -1,12 +1,8 @@
-# Backend
-
-API em FastAPI que atende o frontend do sistema.
-
-## Visão geral da aplicação
+# Visão geral da aplicação
 
 Sistema para professores do ensino fundamental e médio que estima o risco de evasão escolar de cada aluno (baixo, médio ou alto) a partir de notas, faltas, entregas, renda familiar e observações do professor.
 
-### Frontend (`frontend/`): Next.js, React, TypeScript e Tailwind
+# Frontend (`frontend/`): Next.js, React, TypeScript e Tailwind
 
 - **Páginas** (`src/app/`):
   - `login`: login e cadastro de professor.
@@ -24,18 +20,18 @@ Sistema para professores do ensino fundamental e médio que estima o risco de ev
 - **Cálculo de risco** (`src/services/risk.ts`): dá mais peso às notas do semestre atual e devolve uma sugestão de ação para cada nível de risco.
 - **Publicação**: o site é exportado como páginas estáticas, na pasta `out/`.
 
-### Backend (`backend/`): API em FastAPI com Python
+# Backend (`backend/`): API em FastAPI com Python
 
 - **Rotas** (`routers/`): `auth` (cadastro e login de professor), `turmas` (turmas e importação de dados de outros períodos), `alunos` (cadastro e consulta de alunos), `lancamentos` (notas, faltas e entregas) e `ia` (avaliação de risco).
 - **Validação** (`schemas/`): confere os dados de entrada e saída. O schema de aluno guarda a confiança da resposta da IA.
 - **IA** (`services/`): a avaliação usa o modelo Jev, chamado pelo SDK `typesafe_sdk`. O modelo devolve um nível de 0 a 4 e indica quais fatores de risco estão presentes: notas baixas, faltas, atrasos, renda baixa ou observação do professor.
 - **Dados**: ficam em memória (`storage.py`) e são carregados a partir de `seed.py` quando a API inicia.
 
-### Publicação
+# Publicação
 
 O `render.yaml` na raiz do repositório cria dois serviços no Render: a API em Python e o site estático. A chave da API do Jev é preenchida no painel do Render.
 
-## Como executar
+# Como executar
 
 Requer Python 3.10 ou superior. Os comandos abaixo são executados dentro da pasta `backend/`.
 
@@ -51,7 +47,7 @@ A API fica em http://localhost:8000 e a documentação interativa em http://loca
 
 Os dados ficam em memória nesta etapa e voltam ao estado inicial sempre que a API reinicia. Ao iniciar, a API carrega as mesmas turmas, alunos e lançamentos do frontend, e as contas de demonstração continuam valendo (`helena@escola.edu.br` / `senha123`).
 
-## Variáveis de ambiente
+# Variáveis de ambiente
 
 O arquivo `.env.example` lista as variáveis aceitas. Para mudar algum valor, copie o arquivo para `.env` e edite. Sem o `.env`, os valores padrão são usados.
 
@@ -60,7 +56,7 @@ O arquivo `.env.example` lista as variáveis aceitas. Para mudar algum valor, co
 | `CORS_ORIGINS` | Endereços do frontend que podem acessar a API, separados por vírgula | `http://localhost:3000` |
 
 
-## Rotas
+# Rotas
 
 | Método | Rota | Descrição |
 |---|---|---|
@@ -74,7 +70,7 @@ O arquivo `.env.example` lista as variáveis aceitas. Para mudar algum valor, co
 | GET | `/alunos/{id}/lancamentos` | Notas, faltas e entregas de um aluno |
 | POST | `/notas`, `/faltas`, `/entregas` | Registra lançamentos |
 
-## Estrutura
+# Estrutura
 
 - `main.py`: cria a aplicação, configura o CORS e registra as rotas
 - `config.py`: leitura das variáveis de ambiente
