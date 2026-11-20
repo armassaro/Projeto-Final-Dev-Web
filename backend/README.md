@@ -68,6 +68,7 @@ O arquivo `.env.example` lista as variáveis aceitas. Para mudar algum valor, co
 | GET, POST | `/alunos` | Lista (opcionalmente por `classroom_id`) e cadastra alunos |
 | GET, PATCH | `/alunos/{id}` | Consulta e edita um aluno |
 | GET | `/alunos/{id}/lancamentos` | Notas, faltas e entregas de um aluno |
+| GET | `/lancamentos` | Notas, faltas e entregas de todos os alunos do professor |
 | POST | `/notas`, `/faltas`, `/entregas` | Registra lançamentos |
 
 # Estrutura

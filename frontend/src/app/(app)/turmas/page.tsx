@@ -13,7 +13,6 @@ import { DataTable } from "@/components/ui/DataTable";
 import type { Column } from "@/components/ui/DataTable";
 import { Modal } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { useTeacherData } from "@/hooks/useTeacherData";
 import { formatCurrency } from "@/services/format";
@@ -25,12 +24,11 @@ type ActiveModal =
   | null;
 
 export default function ClassroomsPage() {
-  const { user } = useAuth();
   const { addClassroom, saveStudent } = useData();
   const { classrooms, students } = useTeacherData();
   const [selectedId, setSelectedId] = useState<string>();
   const [modal, setModal] = useState<ActiveModal>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
 
   const selected = classrooms.find((classroom) => classroom.id === selectedId) ?? classrooms[0];
   const classroomStudents = students.filter((student) => student.classroomId === selected?.id);
@@ -67,7 +65,7 @@ export default function ClassroomsPage() {
       />
       {feedback && (
         <div className="mb-4">
-          <Alert tone="success">{feedback}</Alert>
+          <Alert tone={feedback.tone}>{feedback.message}</Alert>
         </div>
       )}
       {!selected ? (
@@ -106,9 +104,9 @@ export default function ClassroomsPage() {
       {modal?.kind === "classroom" && (
         <Modal title="Nova turma" onClose={() => setModal(null)}>
           <ClassroomForm
-            onSave={(values) => {
-              addClassroom({ ...values, teacherId: user?.id ?? "" });
-              setFeedback(`Turma ${values.name} criada.`);
+            onSave={async (values) => {
+              const error = await addClassroom(values);
+              setFeedback(error ? { tone: "error", message: error } : { tone: "success", message: `Turma ${values.name} criada.` });
               setModal(null);
             }}
           />
@@ -120,9 +118,9 @@ export default function ClassroomsPage() {
             student={modal.student}
             defaultClassroomId={selected.id}
             classroomOptions={classroomOptions}
-            onSave={(values) => {
-              saveStudent(values);
-              setFeedback(`Aluno ${values.name} salvo.`);
+            onSave={async (values) => {
+              const error = await saveStudent(values);
+              setFeedback(error ? { tone: "error", message: error } : { tone: "success", message: `Aluno ${values.name} salvo.` });
               setModal(null);
             }}
           />

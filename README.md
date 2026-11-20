@@ -27,6 +27,18 @@ O arquivo `.env.example` lista as variáveis aceitas. Para mudar algum valor, co
 | `CORS_ORIGINS` | Endereços do frontend que podem acessar a API, separados por vírgula | `http://localhost:3000` |
 
 
+## Frontend
+
+O frontend (pasta `frontend/`) consome esta API. O endereço da API vem da variável `NEXT_PUBLIC_API_URL` (padrão `http://localhost:8000`); para mudar, copie `frontend/.env.example` para `frontend/.env.local`. Como o site é exportado como estático, a variável é lida no build.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Com a API e o frontend rodando, acesse http://localhost:3000. O professor logado é enviado à API no cabeçalho `X-Teacher-Id`.
+
 ## Rotas
 
 | Método | Rota | Descrição |
@@ -39,6 +51,7 @@ O arquivo `.env.example` lista as variáveis aceitas. Para mudar algum valor, co
 | GET, POST | `/alunos` | Lista (opcionalmente por `classroom_id`) e cadastra alunos |
 | GET, PATCH | `/alunos/{id}` | Consulta e edita um aluno |
 | GET | `/alunos/{id}/lancamentos` | Notas, faltas e entregas de um aluno |
+| GET | `/lancamentos` | Notas, faltas e entregas de todos os alunos do professor |
 | POST | `/notas`, `/faltas`, `/entregas` | Registra lançamentos |
 
 ## Estrutura

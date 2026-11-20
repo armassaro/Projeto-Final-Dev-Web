@@ -34,12 +34,14 @@ export default function RecordsPage() {
   const [studentId, setStudentId] = useState<string>();
   const [tab, setTab] = useState<RecordTab>("nota");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const classroom = classrooms.find((item) => item.id === classroomId) ?? classrooms[0];
   const classroomStudents = students.filter((item) => item.classroomId === classroom?.id);
   const student = classroomStudents.find((item) => item.id === studentId) ?? classroomStudents[0];
 
   function notify(message: string) {
+    setError(null);
     if (student) setFeedback({ message, previousLevel: student.risk.level });
   }
 
@@ -59,6 +61,7 @@ export default function RecordsPage() {
               setClassroomId(event.target.value);
               setStudentId(undefined);
               setFeedback(null);
+              setError(null);
             }}
           />
           <SelectField
@@ -68,6 +71,7 @@ export default function RecordsPage() {
             onChange={(event) => {
               setStudentId(event.target.value);
               setFeedback(null);
+              setError(null);
             }}
           />
         </div>
@@ -85,9 +89,10 @@ export default function RecordsPage() {
               <GradeForm
                 key={student.id}
                 studentId={student.id}
-                onSave={(grade) => {
-                  notify("Nota registrada.");
-                  addGrade(grade);
+                onSave={async (grade) => {
+                  const error = await addGrade(grade);
+                  if (error) setError(error);
+                  else notify("Nota registrada.");
                 }}
               />
             )}
@@ -95,9 +100,10 @@ export default function RecordsPage() {
               <AbsenceForm
                 key={student.id}
                 studentId={student.id}
-                onSave={(absence) => {
-                  notify("Falta registrada.");
-                  addAbsence(absence);
+                onSave={async (absence) => {
+                  const error = await addAbsence(absence);
+                  if (error) setError(error);
+                  else notify("Falta registrada.");
                 }}
               />
             )}
@@ -105,15 +111,17 @@ export default function RecordsPage() {
               <DeliveryForm
                 key={student.id}
                 studentId={student.id}
-                onSave={(delivery) => {
-                  notify("Entrega registrada.");
-                  addDelivery(delivery);
+                onSave={async (delivery) => {
+                  const error = await addDelivery(delivery);
+                  if (error) setError(error);
+                  else notify("Entrega registrada.");
                 }}
               />
             )}
           </Card>
           <div className="min-w-0 space-y-4">
-            {feedback && (
+            {error && <Alert tone="error">{error}</Alert>}
+            {feedback && !error && (
               <Alert tone="success">
                 {feedback.message} Risco recalculado: {RISK_LABELS[feedback.previousLevel]} →{" "}
                 {RISK_LABELS[student.risk.level]}.

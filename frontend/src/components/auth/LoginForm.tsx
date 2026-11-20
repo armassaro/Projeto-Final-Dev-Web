@@ -19,7 +19,7 @@ export function LoginForm() {
     <form
       noValidate
       className="space-y-3"
-      onSubmit={handleSubmit((values) => setError(login(values.email, values.password)))}
+      onSubmit={handleSubmit(async (values) => setError(await login(values.email, values.password)))}
     >
       {error && <Alert tone="error">{error}</Alert>}
       <TextField label="E-mail" type="email" autoComplete="email" {...bind("email")} />

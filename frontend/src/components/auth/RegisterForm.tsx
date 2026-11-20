@@ -24,8 +24,8 @@ export function RegisterForm() {
     <form
       noValidate
       className="space-y-3"
-      onSubmit={handleSubmit(({ name, email, password }) =>
-        setError(register({ name, email, password })),
+      onSubmit={handleSubmit(async ({ name, email, password }) =>
+        setError(await register({ name, email, password })),
       )}
     >
       {error && <Alert tone="error">{error}</Alert>}

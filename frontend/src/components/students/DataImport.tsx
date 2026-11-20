@@ -22,7 +22,11 @@ export function DataImport({ classroomId }: { classroomId: string }) {
       setResult({ message: "Nenhum registro válido encontrado.", errors, success: false });
       return;
     }
-    const { added, duplicates } = importRows(classroomId, rows);
+    const { added, duplicates, error } = await importRows(classroomId, rows);
+    if (error) {
+      setResult({ message: error, errors, success: false });
+      return;
+    }
     setResult({
       message: `${added} registro(s) importado(s), ${duplicates} duplicado(s) ignorado(s), ${errors.length} com erro.`,
       errors,

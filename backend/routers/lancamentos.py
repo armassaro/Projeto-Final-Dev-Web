@@ -3,11 +3,23 @@ from fastapi import APIRouter, status
 import storage
 from auth.dependencies import CurrentTeacher
 from routers.common import get_owned_student
+from schemas.lancamentos import StudentRecords
 from schemas.entregas import DeliveryCreate, DeliveryRead
 from schemas.faltas import AbsenceCreate, AbsenceRead
 from schemas.notas import GradeCreate, GradeRead
 
 router = APIRouter(tags=["Lançamentos"])
+
+
+@router.get("/lancamentos", response_model=StudentRecords)
+def list_teacher_records(teacher: CurrentTeacher):
+    """Notas, faltas e entregas de todos os alunos das turmas do professor."""
+    records = {"grades": [], "absences": [], "deliveries": []}
+    for classroom in storage.classrooms_of_teacher(teacher["id"]):
+        for student in storage.students_of_classroom(classroom["id"]):
+            for kind, items in storage.records_of_student(student["id"]).items():
+                records[kind].extend(items)
+    return records
 
 
 @router.post("/notas", response_model=GradeRead, status_code=status.HTTP_201_CREATED)

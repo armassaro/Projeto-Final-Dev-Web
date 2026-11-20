@@ -1,20 +1,20 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
 import type { ReactNode } from "react";
-import { mockData } from "@/data/mock";
-import { buildImportPatch } from "@/services/import";
-import { createId } from "@/services/format";
-import { loadFromStorage, saveToStorage } from "@/services/storage";
+import { useAuth } from "@/contexts/AuthContext";
+import { api, describeError } from "@/services/api";
 import type { Absence, Classroom, Delivery, Grade, ImportRow, SchoolData, Student } from "@/types";
 
-const DATA_KEY = "evasao:dados";
+const EMPTY_DATA: SchoolData = { classrooms: [], students: [], grades: [], absences: [], deliveries: [] };
 
 type Action =
   | { type: "hydrate"; data: SchoolData }
   | { type: "addClassroom"; classroom: Classroom }
   | { type: "saveStudent"; student: Student }
-  | { type: "merge"; patch: Pick<SchoolData, "students" | "grades" | "absences" | "deliveries"> };
+  | { type: "addGrade"; grade: Grade }
+  | { type: "addAbsence"; absence: Absence }
+  | { type: "addDelivery"; delivery: Delivery };
 
 function reducer(state: SchoolData, action: Action): SchoolData {
   switch (action.type) {
@@ -27,81 +27,146 @@ function reducer(state: SchoolData, action: Action): SchoolData {
       return {
         ...state,
         students: exists
-          ? state.students.map((student) =>
-              student.id === action.student.id ? action.student : student,
-            )
+          ? state.students.map((student) => (student.id === action.student.id ? action.student : student))
           : [...state.students, action.student],
       };
     }
-    case "merge":
-      return {
-        ...state,
-        students: [...state.students, ...action.patch.students],
-        grades: [...state.grades, ...action.patch.grades],
-        absences: [...state.absences, ...action.patch.absences],
-        deliveries: [...state.deliveries, ...action.patch.deliveries],
-      };
+    case "addGrade":
+      return { ...state, grades: [...state.grades, action.grade] };
+    case "addAbsence":
+      return { ...state, absences: [...state.absences, action.absence] };
+    case "addDelivery":
+      return { ...state, deliveries: [...state.deliveries, action.delivery] };
   }
 }
 
-const EMPTY_PATCH = { students: [], grades: [], absences: [], deliveries: [] };
+/** Resultado das operações: mensagem de erro, ou null em caso de sucesso. */
+type Result = Promise<string | null>;
+type ImportResult = { added: number; duplicates: number; error: string | null };
 
 type DataContextValue = {
   data: SchoolData;
-  addClassroom: (input: Omit<Classroom, "id">) => void;
-  saveStudent: (input: Omit<Student, "id"> & { id?: string }) => void;
-  addGrade: (input: Omit<Grade, "id">) => void;
-  addAbsence: (input: Omit<Absence, "id">) => void;
-  addDelivery: (input: Omit<Delivery, "id">) => void;
-  importRows: (classroomId: string, rows: ImportRow[]) => { added: number; duplicates: number };
+  loadError: string | null;
+  reload: () => Promise<void>;
+  addClassroom: (input: Omit<Classroom, "id" | "teacherId">) => Result;
+  saveStudent: (input: Omit<Student, "id"> & { id?: string }) => Result;
+  addGrade: (input: Omit<Grade, "id">) => Result;
+  addAbsence: (input: Omit<Absence, "id">) => Result;
+  addDelivery: (input: Omit<Delivery, "id">) => Result;
+  importRows: (classroomId: string, rows: ImportRow[]) => Promise<ImportResult>;
 };
+
+async function fetchAll(): Promise<SchoolData> {
+  const [classrooms, students, records] = await Promise.all([
+    api.listClassrooms(),
+    api.listStudents(),
+    api.listRecords(),
+  ]);
+  return { classrooms, students, ...records };
+}
 
 const DataContext = createContext<DataContextValue | null>(null);
 
+async function attempt(action: () => Promise<void>): Result {
+  try {
+    await action();
+    return null;
+  } catch (error) {
+    return describeError(error);
+  }
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [data, dispatch] = useReducer(reducer, mockData);
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [data, dispatch] = useReducer(reducer, EMPTY_DATA);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
+  const reload = useCallback(async () => {
+    try {
+      dispatch({ type: "hydrate", data: await fetchAll() });
+      setLoadError(null);
+    } catch (error) {
+      setLoadError(describeError(error));
+    }
+  }, []);
+
+  // Recarrega os dados sempre que o professor logado muda.
   useEffect(() => {
-    const stored = loadFromStorage<SchoolData>(DATA_KEY);
-    if (stored) dispatch({ type: "hydrate", data: stored });
-  }, []);
+    let current = true;
+    (userId ? fetchAll() : Promise.resolve(EMPTY_DATA))
+      .then((loaded) => {
+        if (!current) return;
+        dispatch({ type: "hydrate", data: loaded });
+        setLoadError(null);
+      })
+      .catch((error) => {
+        if (current) setLoadError(describeError(error));
+      });
+    return () => {
+      current = false;
+    };
+  }, [userId]);
 
-  useEffect(() => {
-    if (data !== mockData) saveToStorage(DATA_KEY, data);
-  }, [data]);
+  const addClassroom = useCallback(
+    (input: Omit<Classroom, "id" | "teacherId">) =>
+      attempt(async () => dispatch({ type: "addClassroom", classroom: await api.createClassroom(input) })),
+    [],
+  );
 
-  const addClassroom = useCallback((input: Omit<Classroom, "id">) => {
-    dispatch({ type: "addClassroom", classroom: { ...input, id: createId() } });
-  }, []);
+  const saveStudent = useCallback(
+    ({ id, ...input }: Omit<Student, "id"> & { id?: string }) =>
+      attempt(async () => {
+        const student = id ? await api.updateStudent(id, input) : await api.createStudent(input);
+        dispatch({ type: "saveStudent", student });
+      }),
+    [],
+  );
 
-  const saveStudent = useCallback((input: Omit<Student, "id"> & { id?: string }) => {
-    dispatch({ type: "saveStudent", student: { ...input, id: input.id ?? createId() } });
-  }, []);
+  const addGrade = useCallback(
+    (input: Omit<Grade, "id">) =>
+      attempt(async () => dispatch({ type: "addGrade", grade: await api.createGrade(input) })),
+    [],
+  );
 
-  const addGrade = useCallback((input: Omit<Grade, "id">) => {
-    dispatch({ type: "merge", patch: { ...EMPTY_PATCH, grades: [{ ...input, id: createId() }] } });
-  }, []);
+  const addAbsence = useCallback(
+    (input: Omit<Absence, "id">) =>
+      attempt(async () => dispatch({ type: "addAbsence", absence: await api.createAbsence(input) })),
+    [],
+  );
 
-  const addAbsence = useCallback((input: Omit<Absence, "id">) => {
-    dispatch({ type: "merge", patch: { ...EMPTY_PATCH, absences: [{ ...input, id: createId() }] } });
-  }, []);
-
-  const addDelivery = useCallback((input: Omit<Delivery, "id">) => {
-    dispatch({ type: "merge", patch: { ...EMPTY_PATCH, deliveries: [{ ...input, id: createId() }] } });
-  }, []);
+  const addDelivery = useCallback(
+    (input: Omit<Delivery, "id">) =>
+      attempt(async () => dispatch({ type: "addDelivery", delivery: await api.createDelivery(input) })),
+    [],
+  );
 
   const importRows = useCallback(
-    (classroomId: string, rows: ImportRow[]) => {
-      const patch = buildImportPatch(data, classroomId, rows);
-      dispatch({ type: "merge", patch });
-      return { added: patch.added, duplicates: patch.duplicates };
+    async (classroomId: string, rows: ImportRow[]): Promise<ImportResult> => {
+      try {
+        const result = await api.importRows(classroomId, rows);
+        await reload();
+        return { ...result, error: null };
+      } catch (error) {
+        return { added: 0, duplicates: 0, error: describeError(error) };
+      }
     },
-    [data],
+    [reload],
   );
 
   const value = useMemo(
-    () => ({ data, addClassroom, saveStudent, addGrade, addAbsence, addDelivery, importRows }),
-    [data, addClassroom, saveStudent, addGrade, addAbsence, addDelivery, importRows],
+    () => ({
+      data,
+      loadError,
+      reload,
+      addClassroom,
+      saveStudent,
+      addGrade,
+      addAbsence,
+      addDelivery,
+      importRows,
+    }),
+    [data, loadError, reload, addClassroom, saveStudent, addGrade, addAbsence, addDelivery, importRows],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

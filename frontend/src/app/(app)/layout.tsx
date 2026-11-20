@@ -4,10 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { Alert } from "@/components/ui/Alert";
 import { useAuth } from "@/contexts/AuthContext";
+import { useData } from "@/contexts/DataContext";
 
 export default function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const { user, ready, logout } = useAuth();
+  const { loadError, reload } = useData();
   const router = useRouter();
 
   useEffect(() => {
@@ -18,6 +21,16 @@ export default function AuthenticatedLayout({ children }: { children: ReactNode 
 
   return (
     <AppShell userName={user.name} onLogout={logout}>
+      {loadError && (
+        <div className="mb-4">
+          <Alert tone="error">
+            {loadError}{" "}
+            <button type="button" className="underline" onClick={() => void reload()}>
+              Tentar novamente
+            </button>
+          </Alert>
+        </div>
+      )}
       {children}
     </AppShell>
   );

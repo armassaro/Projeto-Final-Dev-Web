@@ -1,99 +1,82 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { mockTeachers } from "@/data/mock";
-import { createId } from "@/services/format";
+import { ApiError, api, describeError, setApiTeacher } from "@/services/api";
 import { loadFromStorage, saveToStorage } from "@/services/storage";
 import type { Teacher } from "@/types";
 
-const TEACHERS_KEY = "evasao:professores";
 const SESSION_KEY = "evasao:sessao";
 
-type RegisterInput = Pick<Teacher, "name" | "email" | "password">;
+type RegisterInput = { name: string; email: string; password: string };
 
 type AuthContextValue = {
   user: Teacher | null;
   ready: boolean;
-  login: (email: string, password: string) => string | null;
-  register: (input: RegisterInput) => string | null;
+  /** Devolve a mensagem de erro, ou null em caso de sucesso. */
+  login: (email: string, password: string) => Promise<string | null>;
+  register: (input: RegisterInput) => Promise<string | null>;
   logout: () => void;
 };
-
-type AuthState = {
-  teachers: Teacher[];
-  userId: string | null;
-  ready: boolean;
-};
-
-const INITIAL_STATE: AuthState = { teachers: mockTeachers, userId: null, ready: false };
-
-function reducer(state: AuthState, patch: Partial<AuthState>): AuthState {
-  return { ...state, ...patch };
-}
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [{ teachers, userId, ready }, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const [user, setUser] = useState<Teacher | null>(null);
+  const [ready, setReady] = useState(false);
+
+  const startSession = useCallback((teacher: Teacher | null) => {
+    setApiTeacher(teacher?.id ?? null);
+    saveToStorage(SESSION_KEY, teacher?.id ?? null);
+    setUser(teacher);
+  }, []);
 
   useEffect(() => {
-    dispatch({
-      teachers: loadFromStorage<Teacher[]>(TEACHERS_KEY) ?? mockTeachers,
-      userId: loadFromStorage<string>(SESSION_KEY),
-      ready: true,
-    });
-  }, []);
-
-  const startSession = useCallback((id: string) => {
-    dispatch({ userId: id });
-    saveToStorage(SESSION_KEY, id);
-  }, []);
+    const storedId = loadFromStorage<string>(SESSION_KEY);
+    setApiTeacher(storedId);
+    const restore = storedId
+      ? api
+          .me()
+          .then(startSession)
+          .catch((error) => {
+            // Só descarta a sessão salva se a API recusou o professor (ex.: a API reiniciou).
+            if (error instanceof ApiError && error.status === 401) startSession(null);
+            else setApiTeacher(null);
+          })
+      : Promise.resolve();
+    void restore.finally(() => setReady(true));
+  }, [startSession]);
 
   const login = useCallback(
-    (email: string, password: string) => {
-      const teacher = teachers.find(
-        (item) => item.email.toLowerCase() === email.trim().toLowerCase(),
-      );
-      if (!teacher || teacher.password !== password) {
-        return "E-mail ou senha incorretos.";
+    async (email: string, password: string) => {
+      try {
+        startSession(await api.login(email.trim(), password));
+        return null;
+      } catch (error) {
+        return describeError(error);
       }
-      startSession(teacher.id);
-      return null;
     },
-    [teachers, startSession],
+    [startSession],
   );
 
   const register = useCallback(
-    (input: RegisterInput) => {
-      const email = input.email.trim().toLowerCase();
-      if (teachers.some((item) => item.email.toLowerCase() === email)) {
-        return "Já existe um professor com este e-mail.";
+    async (input: RegisterInput) => {
+      try {
+        await api.register({ ...input, name: input.name.trim(), email: input.email.trim() });
+        startSession(await api.login(input.email.trim(), input.password));
+        return null;
+      } catch (error) {
+        return describeError(error);
       }
-      const teacher: Teacher = { ...input, id: createId(), name: input.name.trim(), email };
-      const updated = [...teachers, teacher];
-      dispatch({ teachers: updated });
-      saveToStorage(TEACHERS_KEY, updated);
-      startSession(teacher.id);
-      return null;
     },
-    [teachers, startSession],
+    [startSession],
   );
 
-  const logout = useCallback(() => {
-    dispatch({ userId: null });
-    saveToStorage(SESSION_KEY, null);
-  }, []);
+  const logout = useCallback(() => startSession(null), [startSession]);
 
   const value = useMemo(
-    () => ({
-      user: teachers.find((item) => item.id === userId) ?? null,
-      ready,
-      login,
-      register,
-      logout,
-    }),
-    [teachers, userId, ready, login, register, logout],
+    () => ({ user, ready, login, register, logout }),
+    [user, ready, login, register, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
