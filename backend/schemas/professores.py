@@ -1,4 +1,4 @@
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from .base import CamelModel
 
@@ -48,3 +48,8 @@ class TeacherLogin(CamelModel):
     def normalize_email(cls, value: str) -> str:
         return value.strip().lower()
 
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    teacher: TeacherRead

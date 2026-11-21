@@ -2,11 +2,12 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { ApiError, api, describeError, setApiTeacher } from "@/services/api";
+import { ApiError, api, describeError, setApiToken, setUnauthorizedHandler } from "@/services/api";
+import type { AuthSession } from "@/services/api";
 import { loadFromStorage, saveToStorage } from "@/services/storage";
 import type { Teacher } from "@/types";
 
-const SESSION_KEY = "evasao:sessao";
+const TOKEN_KEY = "evasao:token";
 
 type RegisterInput = { name: string; email: string; password: string };
 
@@ -25,23 +26,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Teacher | null>(null);
   const [ready, setReady] = useState(false);
 
-  const startSession = useCallback((teacher: Teacher | null) => {
-    setApiTeacher(teacher?.id ?? null);
-    saveToStorage(SESSION_KEY, teacher?.id ?? null);
+  const startSession = useCallback((token: string | null, teacher: Teacher | null) => {
+    setApiToken(token);
+    saveToStorage(TOKEN_KEY, token);
     setUser(teacher);
   }, []);
 
+  const openSession = useCallback(
+    (session: AuthSession) => startSession(session.access_token, session.teacher),
+    [startSession],
+  );
+
   useEffect(() => {
-    const storedId = loadFromStorage<string>(SESSION_KEY);
-    setApiTeacher(storedId);
-    const restore = storedId
+    setUnauthorizedHandler(() => startSession(null, null));
+    return () => setUnauthorizedHandler(null);
+  }, [startSession]);
+
+  useEffect(() => {
+    const storedToken = loadFromStorage<string>(TOKEN_KEY);
+    setApiToken(storedToken);
+    const restore = storedToken
       ? api
           .me()
-          .then(startSession)
+          .then((teacher) => startSession(storedToken, teacher))
           .catch((error) => {
-            // Só descarta a sessão salva se a API recusou o professor (ex.: a API reiniciou).
-            if (error instanceof ApiError && error.status === 401) startSession(null);
-            else setApiTeacher(null);
+            // Só descarta o token salvo se a API recusou (vencido ou inválido).
+            if (error instanceof ApiError && error.status === 401) startSession(null, null);
+            else setApiToken(null);
           })
       : Promise.resolve();
     void restore.finally(() => setReady(true));
@@ -50,29 +61,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       try {
-        startSession(await api.login(email.trim(), password));
+        openSession(await api.login(email.trim(), password));
         return null;
       } catch (error) {
         return describeError(error);
       }
     },
-    [startSession],
+    [openSession],
   );
 
   const register = useCallback(
     async (input: RegisterInput) => {
       try {
-        await api.register({ ...input, name: input.name.trim(), email: input.email.trim() });
-        startSession(await api.login(input.email.trim(), input.password));
+        openSession(
+          await api.register({ ...input, name: input.name.trim(), email: input.email.trim() }),
+        );
         return null;
       } catch (error) {
         return describeError(error);
       }
     },
-    [startSession],
+    [openSession],
   );
 
-  const logout = useCallback(() => startSession(null), [startSession]);
+  const logout = useCallback(() => startSession(null, null), [startSession]);
 
   const value = useMemo(
     () => ({ user, ready, login, register, logout }),

@@ -19,6 +19,9 @@ services:
       # Preenchido no painel na criação do Blueprint.
       - key: CORS_ORIGINS
         sync: false
+      # Chave que assina os tokens de login. O Render gera um valor aleatório.
+      - key: SECRET_KEY
+        generateValue: true
       # Chave da API do Jev. Nunca vai para o repositório: é pedida no painel.
       - key: TYPESAFE_API_KEY
         sync: false

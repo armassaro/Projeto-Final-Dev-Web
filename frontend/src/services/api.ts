@@ -11,12 +11,24 @@ import type {
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/+$/, "");
 
-let teacherId: string | null = null;
+let authToken: string | null = null;
+let onUnauthorized: (() => void) | null = null;
 
-/** Define o professor enviado no cabeçalho X-Teacher-Id das próximas requisições. */
-export function setApiTeacher(id: string | null): void {
-  teacherId = id;
+/** Define o token JWT enviado no cabeçalho Authorization das próximas requisições. */
+export function setApiToken(token: string | null): void {
+  authToken = token;
 }
+
+/** Função chamada quando a API recusa o token (vencido ou inválido). */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler;
+}
+
+export type AuthSession = {
+  access_token: string;
+  token_type: string;
+  teacher: Teacher;
+};
 
 export class ApiError extends Error {
   constructor(
@@ -44,7 +56,7 @@ function errorMessage(body: unknown, status: number): string {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body) headers.set("Content-Type", "application/json");
-  if (teacherId) headers.set("X-Teacher-Id", teacherId);
+  if (authToken) headers.set("Authorization", `Bearer ${authToken}`);
 
   let response: Response;
   try {
@@ -52,6 +64,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   } catch {
     throw new ApiError("Não foi possível conectar ao servidor.", 0);
   }
+
+  if (response.status === 401 && authToken) onUnauthorized?.();
 
   const body = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) throw new ApiError(errorMessage(body, response.status), response.status);
@@ -66,9 +80,9 @@ export function describeError(error: unknown): string {
 }
 
 export const api = {
-  login: (email: string, password: string) => post<Teacher>("/auth/login", { email, password }),
+  login: (email: string, password: string) => post<AuthSession>("/auth/login", { email, password }),
   register: (input: { name: string; email: string; password: string }) =>
-    post<Teacher>("/auth/register", input),
+    post<AuthSession>("/auth/register", input),
   me: () => request<Teacher>("/auth/me"),
 
   listClassrooms: () => request<Classroom[]>("/turmas"),
