@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ClassroomForm } from "@/components/classrooms/ClassroomForm";
 import { ClassroomList } from "@/components/classrooms/ClassroomList";
-import { RiskBadge } from "@/components/risk/RiskBadge";
+import { RiskStatusBadge } from "@/components/risk/RiskStatusBadge";
 import { DataImport } from "@/components/students/DataImport";
 import { StudentForm } from "@/components/students/StudentForm";
 import { Alert } from "@/components/ui/Alert";
@@ -25,7 +25,7 @@ type ActiveModal =
 
 export default function ClassroomsPage() {
   const { addClassroom, saveStudent } = useData();
-  const { classrooms, students } = useTeacherData();
+  const { classrooms, students, retryRisk } = useTeacherData();
   const [selectedId, setSelectedId] = useState<string>();
   const [modal, setModal] = useState<ActiveModal>(null);
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
@@ -45,7 +45,10 @@ export default function ClassroomsPage() {
         student.familyIncome === null ? "-" : formatCurrency(student.familyIncome),
     },
     { header: "Observações", render: (student) => student.observations || "-" },
-    { header: "Risco", render: (student) => <RiskBadge level={student.risk.level} /> },
+    {
+      header: "Risco",
+      render: (student) => <RiskStatusBadge risk={student.risk} onRetry={() => retryRisk(student)} />,
+    },
     {
       header: "Ações",
       render: (student) => (

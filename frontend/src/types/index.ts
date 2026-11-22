@@ -73,9 +73,16 @@ export type RiskAssessment = {
   confidence?: number | null;
 };
 
+/** Situação do cálculo de risco feito pela IA para um aluno. */
+export type RiskState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; assessment: RiskAssessment };
+
 export type StudentWithRisk = Student & {
   classroomName: string;
-  risk: RiskAssessment;
+  average: number | null;
+  risk: RiskState;
 };
 
 export type ImportRow = {

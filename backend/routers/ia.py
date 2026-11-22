@@ -11,8 +11,11 @@ from typesafe_sdk import (
     TypeSafeRateLimitError,
 )
 
+import storage
 from auth.dependencies import CurrentTeacher
-from schemas.alunos import RiskAssessment
+from routers.common import get_owned_student
+from schemas.alunos import RiskAssessment, StudentRead
+from schemas.lancamentos import StudentRecords
 from services.jev_risco import ExampleStudent, assess_risk, load_examples
 
 logger = logging.getLogger(__name__)
@@ -35,8 +38,20 @@ def list_examples(teacher: CurrentTeacher):
 @router.post("/exemplos/{example_id}/risco", response_model=RiskAssessment)
 def assess_example_risk(example_id: str, teacher: CurrentTeacher):
     example = _get_example(example_id)
+    return _run_assessment(example, example.records)
+
+
+@router.post("/alunos/{student_id}/risco", response_model=RiskAssessment)
+def assess_student_risk(student_id: str, teacher: CurrentTeacher):
+    """Calcula com a IA o risco de evasão de um aluno do professor logado."""
+    student = StudentRead.model_validate(get_owned_student(student_id, teacher))
+    records = StudentRecords.model_validate(storage.records_of_student(student_id))
+    return _run_assessment(student, records)
+
+
+def _run_assessment(student: StudentRead, records: StudentRecords) -> RiskAssessment:
     try:
-        return assess_risk(example)
+        return assess_risk(student, records)
     except (TypeSafeAuthenticationError, TypeSafePermissionDeniedError) as error:
         logger.warning("Jev recusou a chave da API (status %s)", error.status)
         raise HTTPException(

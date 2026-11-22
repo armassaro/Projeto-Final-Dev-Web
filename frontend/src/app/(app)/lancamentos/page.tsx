@@ -15,7 +15,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { useData } from "@/contexts/DataContext";
 import { useTeacherData } from "@/hooks/useTeacherData";
 import { getSemesterRecords } from "@/services/risk";
-import type { RiskLevel } from "@/types";
+import type { RiskLevel, RiskState } from "@/types";
 
 type RecordTab = "nota" | "falta" | "entrega";
 
@@ -25,11 +25,15 @@ const TABS: { value: RecordTab; label: string }[] = [
   { value: "entrega", label: "Entrega" },
 ];
 
-type Feedback = { message: string; previousLevel: RiskLevel };
+type Feedback = { message: string; previousLevel: RiskLevel | null };
+
+function levelOf(risk: RiskState): RiskLevel | null {
+  return risk.status === "ready" ? risk.assessment.level : null;
+}
 
 export default function RecordsPage() {
   const { addGrade, addAbsence, addDelivery } = useData();
-  const { classrooms, students, getRecords } = useTeacherData();
+  const { classrooms, students, getRecords, retryRisk } = useTeacherData();
   const [classroomId, setClassroomId] = useState<string>();
   const [studentId, setStudentId] = useState<string>();
   const [tab, setTab] = useState<RecordTab>("nota");
@@ -42,7 +46,7 @@ export default function RecordsPage() {
 
   function notify(message: string) {
     setError(null);
-    if (student) setFeedback({ message, previousLevel: student.risk.level });
+    if (student) setFeedback({ message, previousLevel: levelOf(student.risk) });
   }
 
   return (
@@ -123,12 +127,16 @@ export default function RecordsPage() {
             {error && <Alert tone="error">{error}</Alert>}
             {feedback && !error && (
               <Alert tone="success">
-                {feedback.message} Risco recalculado: {RISK_LABELS[feedback.previousLevel]} →{" "}
-                {RISK_LABELS[student.risk.level]}.
+                {feedback.message}{" "}
+                {student.risk.status === "loading" && "A IA está recalculando o risco..."}
+                {student.risk.status === "ready" &&
+                  (feedback.previousLevel
+                    ? `Risco recalculado: ${RISK_LABELS[feedback.previousLevel]} → ${RISK_LABELS[student.risk.assessment.level]}.`
+                    : `Risco recalculado: ${RISK_LABELS[student.risk.assessment.level]}.`)}
               </Alert>
             )}
             <Card title={student.name}>
-              <RiskSummary risk={student.risk} />
+              <RiskSummary risk={student.risk} onRetry={() => retryRisk(student)} />
             </Card>
             <Card title="Registros do último semestre">
               <StudentRecordsView records={getSemesterRecords(getRecords(student.id))} />

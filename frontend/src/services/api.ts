@@ -4,6 +4,7 @@ import type {
   Delivery,
   Grade,
   ImportRow,
+  RiskAssessment,
   Student,
   StudentRecords,
   Teacher,
@@ -106,4 +107,7 @@ export const api = {
   createGrade: (input: Omit<Grade, "id">) => post<Grade>("/notas", input),
   createAbsence: (input: Omit<Absence, "id">) => post<Absence>("/faltas", input),
   createDelivery: (input: Omit<Delivery, "id">) => post<Delivery>("/entregas", input),
+
+  assessRisk: (studentId: string) =>
+    request<RiskAssessment>(`/ia/alunos/${encodeURIComponent(studentId)}/risco`, { method: "POST" }),
 };

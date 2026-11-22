@@ -90,14 +90,15 @@ def _average(records: StudentRecords) -> float | None:
     return round(sum(grade.value for grade in records.grades) / len(records.grades), 1)
 
 
-def _build_state(student: ExampleStudent) -> dict:
-    state = student.model_dump(mode="json", by_alias=True, exclude={"id", "classroom_id"})
-    state["average"] = _average(student.records)
+def _build_state(student: StudentRead, records: StudentRecords) -> dict:
+    state = student.model_dump(mode="json", by_alias=True, exclude={"id", "classroom_id", "records"})
+    state["records"] = records.model_dump(mode="json", by_alias=True)
+    state["average"] = _average(records)
     return state
 
 
-def assess_risk(student: ExampleStudent) -> RiskAssessment:
-    records = student.records
+def assess_risk(student: StudentRead, records: StudentRecords) -> RiskAssessment:
+    """Pede ao Jev a análise de risco de evasão do aluno a partir dos seus lançamentos."""
     if not records.grades and not records.absences and not records.deliveries:
         return RiskAssessment(
             level="sem_dados",
@@ -107,7 +108,7 @@ def assess_risk(student: ExampleStudent) -> RiskAssessment:
             suggestion="Registre notas, faltas ou entregas para que o risco seja calculado.",
         )
 
-    result = get_jev_client().system_one(_build_state(student), QUESTIONS)
+    result = get_jev_client().system_one(_build_state(student, records), QUESTIONS)
 
     risk = result.choices["risco"]
     max_level = len(SCORE_LEVELS) - 1

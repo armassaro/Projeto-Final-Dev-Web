@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import { ApiError, api, describeError, setApiToken, setUnauthorizedHandler } from "@/services/api";
 import type { AuthSession } from "@/services/api";
+import { RISK_CACHE_PREFIX } from "@/hooks/useRiskAssessments";
 import { loadFromStorage, saveToStorage } from "@/services/storage";
 import type { Teacher } from "@/types";
 
@@ -29,6 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const startSession = useCallback((token: string | null, teacher: Teacher | null) => {
     setApiToken(token);
     saveToStorage(TOKEN_KEY, token);
+    if (!token) {
+      // Dados sensíveis dos alunos não devem ficar no navegador após o logout.
+      Object.keys(window.sessionStorage)
+        .filter((key) => key.startsWith(RISK_CACHE_PREFIX))
+        .forEach((key) => window.sessionStorage.removeItem(key));
+    }
     setUser(teacher);
   }, []);
 

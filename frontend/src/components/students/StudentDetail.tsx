@@ -7,16 +7,17 @@ import type { StudentRecords, StudentWithRisk } from "@/types";
 type StudentDetailProps = {
   student: StudentWithRisk;
   records: StudentRecords;
+  onRetryRisk?: () => void;
 };
 
-export function StudentDetail({ student, records }: StudentDetailProps) {
+export function StudentDetail({ student, records, onRetryRisk }: StudentDetailProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-600">
         Turma {student.classroomName} · Renda familiar:{" "}
         {student.familyIncome === null ? "não informada" : formatCurrency(student.familyIncome)}
       </p>
-      <RiskSummary risk={student.risk} />
+      <RiskSummary risk={student.risk} onRetry={onRetryRisk} />
       <div className="text-sm">
         <h3 className="font-semibold">Observações</h3>
         <p className="text-slate-700">{student.observations || "Nenhuma observação registrada."}</p>

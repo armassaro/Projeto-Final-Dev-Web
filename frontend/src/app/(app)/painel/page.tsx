@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { RISK_LABELS, RiskBadge } from "@/components/risk/RiskBadge";
+import { RISK_LABELS } from "@/components/risk/RiskBadge";
 import { RiskCounters } from "@/components/risk/RiskCounters";
+import { RiskStatusBadge } from "@/components/risk/RiskStatusBadge";
 import { StudentDetail } from "@/components/students/StudentDetail";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
@@ -12,11 +13,20 @@ import { Modal } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useTeacherData } from "@/hooks/useTeacherData";
 import { formatGrade } from "@/services/format";
-import type { RiskLevel, StudentWithRisk } from "@/types";
+import type { RiskLevel, Student, StudentWithRisk } from "@/types";
 
 const LEVEL_ORDER: Record<RiskLevel, number> = { alto: 0, medio: 1, baixo: 2, sem_dados: 3 };
 
-const COLUMNS: Column<StudentWithRisk>[] = [
+/** Alunos ainda sem resultado da IA (calculando ou com falha) vão para o fim da lista. */
+function riskOrder(student: StudentWithRisk): number {
+  return student.risk.status === "ready" ? LEVEL_ORDER[student.risk.assessment.level] : 4;
+}
+
+function riskScore(student: StudentWithRisk): number {
+  return student.risk.status === "ready" ? student.risk.assessment.score : 0;
+}
+
+const columns = (onRetry: (student: Student) => void): Column<StudentWithRisk>[] => [
   { header: "Aluno", render: (student) => student.name, sortValue: (student) => student.name },
   {
     header: "Turma",
@@ -25,13 +35,13 @@ const COLUMNS: Column<StudentWithRisk>[] = [
   },
   {
     header: "Média",
-    render: (student) => (student.risk.average === null ? "-" : formatGrade(student.risk.average)),
-    sortValue: (student) => student.risk.average,
+    render: (student) => (student.average === null ? "-" : formatGrade(student.average)),
+    sortValue: (student) => student.average,
   },
   {
     header: "Risco",
-    render: (student) => <RiskBadge level={student.risk.level} />,
-    sortValue: (student) => LEVEL_ORDER[student.risk.level],
+    render: (student) => <RiskStatusBadge risk={student.risk} onRetry={() => onRetry(student)} />,
+    sortValue: riskOrder,
   },
 ];
 
@@ -44,7 +54,7 @@ const LEVEL_OPTIONS = [
 ];
 
 export default function RiskPanelPage() {
-  const { classrooms, students, getRecords } = useTeacherData();
+  const { classrooms, students, getRecords, retryRisk } = useTeacherData();
   const [classroomId, setClassroomId] = useState("");
   const [level, setLevel] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -53,11 +63,11 @@ export default function RiskPanelPage() {
     (student) => !classroomId || student.classroomId === classroomId,
   );
   const rows = inClassroom
-    .filter((student) => !level || student.risk.level === level)
-    .sort(
-      (a, b) =>
-        LEVEL_ORDER[a.risk.level] - LEVEL_ORDER[b.risk.level] || b.risk.score - a.risk.score,
-    );
+    .filter(
+      (student) =>
+        !level || (student.risk.status === "ready" && student.risk.assessment.level === level),
+    )
+    .sort((a, b) => riskOrder(a) - riskOrder(b) || riskScore(b) - riskScore(a));
   const selected = students.find((student) => student.id === selectedId);
 
   return (
@@ -86,7 +96,7 @@ export default function RiskPanelPage() {
           />
         </div>
         <DataTable
-          columns={COLUMNS}
+          columns={columns(retryRisk)}
           rows={rows}
           rowKey={(student) => student.id}
           emptyMessage="Nenhum aluno encontrado com estes filtros."
@@ -95,7 +105,11 @@ export default function RiskPanelPage() {
       </Card>
       {selected && (
         <Modal title={selected.name} onClose={() => setSelectedId(null)}>
-          <StudentDetail student={selected} records={getRecords(selected.id)} />
+          <StudentDetail
+            student={selected}
+            records={getRecords(selected.id)}
+            onRetryRisk={() => retryRisk(selected)}
+          />
         </Modal>
       )}
     </>
