@@ -7,11 +7,11 @@ import { useForm } from "@/hooks/useForm";
 export type ClassroomFormValues = { name: string; subject: string; year: number };
 
 type ClassroomFormProps = {
-  onSave: (values: ClassroomFormValues) => void;
+  onSave: (values: ClassroomFormValues) => Promise<void>;
 };
 
 export function ClassroomForm({ onSave }: ClassroomFormProps) {
-  const { bind, handleSubmit } = useForm(
+  const { bind, handleSubmit, submitting } = useForm(
     { name: "", subject: "", year: String(new Date().getFullYear()) },
     (values) => ({
       name: values.name.trim() ? undefined : "Informe o nome da turma.",
@@ -31,7 +31,7 @@ export function ClassroomForm({ onSave }: ClassroomFormProps) {
       <TextField label="Nome da turma" placeholder="Ex.: 9º ano A" {...bind("name")} />
       <TextField label="Disciplina" {...bind("subject")} />
       <TextField label="Ano letivo" inputMode="numeric" {...bind("year")} />
-      <Button type="submit">Salvar turma</Button>
+      <Button type="submit" loading={submitting} loadingText="Salvando...">Salvar turma</Button>
     </form>
   );
 }

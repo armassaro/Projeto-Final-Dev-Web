@@ -17,11 +17,11 @@ type StudentFormProps = {
   student?: Student;
   defaultClassroomId: string;
   classroomOptions: SelectOption[];
-  onSave: (values: Omit<Student, "id"> & { id?: string }) => void;
+  onSave: (values: Omit<Student, "id"> & { id?: string }) => Promise<void>;
 };
 
 export function StudentForm({ student, defaultClassroomId, classroomOptions, onSave }: StudentFormProps) {
-  const { bind, handleSubmit } = useForm(
+  const { bind, handleSubmit, submitting } = useForm(
     {
       name: student?.name ?? "",
       classroomId: student?.classroomId ?? defaultClassroomId,
@@ -59,7 +59,7 @@ export function StudentForm({ student, defaultClassroomId, classroomOptions, onS
       <TextField label="Renda familiar mensal (R$)" inputMode="decimal" hint="Opcional." {...bind("familyIncome")} />
       <TextAreaField label="Observações" {...bind("observations")} />
       <SelectField label="Efeito da observação no risco" options={IMPACT_OPTIONS} {...bind("observationImpact")} />
-      <Button type="submit">Salvar aluno</Button>
+      <Button type="submit" loading={submitting} loadingText="Salvando...">Salvar aluno</Button>
     </form>
   );
 }

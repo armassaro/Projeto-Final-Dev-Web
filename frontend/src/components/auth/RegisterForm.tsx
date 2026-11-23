@@ -10,7 +10,7 @@ import { useForm } from "@/hooks/useForm";
 export function RegisterForm() {
   const { register } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const { bind, handleSubmit } = useForm(
+  const { bind, handleSubmit, submitting } = useForm(
     { name: "", email: "", password: "", confirmation: "" },
     (values) => ({
       name: values.name.trim() ? undefined : "Informe o nome.",
@@ -33,7 +33,7 @@ export function RegisterForm() {
       <TextField label="E-mail" type="email" autoComplete="email" {...bind("email")} />
       <TextField label="Senha" type="password" autoComplete="new-password" {...bind("password")} />
       <TextField label="Confirmar senha" type="password" autoComplete="new-password" {...bind("confirmation")} />
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" loading={submitting} loadingText="Criando conta...">
         Criar conta
       </Button>
     </form>

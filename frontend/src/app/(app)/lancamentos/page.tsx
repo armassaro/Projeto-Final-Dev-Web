@@ -97,6 +97,7 @@ export default function RecordsPage() {
                   const error = await addGrade(grade);
                   if (error) setError(error);
                   else notify("Nota registrada.");
+                  return !error;
                 }}
               />
             )}
@@ -108,6 +109,7 @@ export default function RecordsPage() {
                   const error = await addAbsence(absence);
                   if (error) setError(error);
                   else notify("Falta registrada.");
+                  return !error;
                 }}
               />
             )}
@@ -119,6 +121,7 @@ export default function RecordsPage() {
                   const error = await addDelivery(delivery);
                   if (error) setError(error);
                   else notify("Entrega registrada.");
+                  return !error;
                 }}
               />
             )}

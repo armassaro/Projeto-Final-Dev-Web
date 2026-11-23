@@ -8,11 +8,11 @@ import type { Absence } from "@/types";
 
 type AbsenceFormProps = {
   studentId: string;
-  onSave: (absence: Omit<Absence, "id">) => void;
+  onSave: (absence: Omit<Absence, "id">) => Promise<boolean>;
 };
 
 export function AbsenceForm({ studentId, onSave }: AbsenceFormProps) {
-  const { bind, handleSubmit, reset } = useForm({ date: today() }, (values) => ({
+  const { bind, handleSubmit, reset, submitting } = useForm({ date: today() }, (values) => ({
     date: values.date && values.date <= today() ? undefined : "Informe uma data que não esteja no futuro.",
   }));
 
@@ -20,13 +20,14 @@ export function AbsenceForm({ studentId, onSave }: AbsenceFormProps) {
     <form
       noValidate
       className="space-y-3"
-      onSubmit={handleSubmit((values) => {
-        onSave({ studentId, date: values.date });
-        reset();
+      onSubmit={handleSubmit(async (values) => {
+        const saved = await onSave({ studentId, date: values.date });
+        // Só limpa o formulário se a API confirmou o registro.
+        if (saved) reset();
       })}
     >
       <TextField label="Data da falta" type="date" {...bind("date")} />
-      <Button type="submit">Registrar falta</Button>
+      <Button type="submit" loading={submitting} loadingText="Registrando...">Registrar falta</Button>
     </form>
   );
 }

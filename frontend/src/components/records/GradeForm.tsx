@@ -13,11 +13,11 @@ const TYPE_OPTIONS = [
 
 type GradeFormProps = {
   studentId: string;
-  onSave: (grade: Omit<Grade, "id">) => void;
+  onSave: (grade: Omit<Grade, "id">) => Promise<boolean>;
 };
 
 export function GradeForm({ studentId, onSave }: GradeFormProps) {
-  const { bind, handleSubmit, reset } = useForm(
+  const { bind, handleSubmit, reset, submitting } = useForm(
     { type: "atividade", description: "", value: "", date: today() },
     (values) => {
       const value = parseDecimal(values.value);
@@ -33,22 +33,23 @@ export function GradeForm({ studentId, onSave }: GradeFormProps) {
     <form
       noValidate
       className="space-y-3"
-      onSubmit={handleSubmit((values) => {
-        onSave({
+      onSubmit={handleSubmit(async (values) => {
+        const saved = await onSave({
           studentId,
           type: values.type as GradeType,
           description: values.description.trim(),
           value: parseDecimal(values.value),
           date: values.date,
         });
-        reset();
+        // Só limpa o formulário se a API confirmou o registro.
+        if (saved) reset();
       })}
     >
       <SelectField label="Tipo" options={TYPE_OPTIONS} {...bind("type")} />
       <TextField label="Descrição" {...bind("description")} />
       <TextField label="Nota (0 a 10)" inputMode="decimal" {...bind("value")} />
       <TextField label="Data" type="date" {...bind("date")} />
-      <Button type="submit">Registrar nota</Button>
+      <Button type="submit" loading={submitting} loadingText="Registrando...">Registrar nota</Button>
     </form>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ChangeEvent } from "react";
 import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
 import { useData } from "@/contexts/DataContext";
 import { parseImportJson } from "@/services/import";
 
@@ -11,6 +12,7 @@ type Result = { message: string; errors: string[]; success: boolean };
 export function DataImport({ classroomId }: { classroomId: string }) {
   const { importRows } = useData();
   const [result, setResult] = useState<Result | null>(null);
+  const [importing, setImporting] = useState(false);
 
   async function handleFile(event: ChangeEvent<HTMLInputElement>) {
     const input = event.target;
@@ -22,7 +24,10 @@ export function DataImport({ classroomId }: { classroomId: string }) {
       setResult({ message: "Nenhum registro válido encontrado.", errors, success: false });
       return;
     }
+    setResult(null);
+    setImporting(true);
     const { added, duplicates, error } = await importRows(classroomId, rows);
+    setImporting(false);
     if (error) {
       setResult({ message: error, errors, success: false });
       return;
@@ -45,7 +50,19 @@ export function DataImport({ classroomId }: { classroomId: string }) {
           Baixar exemplo
         </a>
       </p>
-      <input type="file" accept=".json,application/json" aria-label="Arquivo JSON" onChange={handleFile} />
+      <input
+        type="file"
+        accept=".json,application/json"
+        aria-label="Arquivo JSON"
+        disabled={importing}
+        onChange={handleFile}
+      />
+      {importing && (
+        <p role="status" className="flex items-center gap-2 text-slate-600">
+          <Spinner />
+          Importando registros...
+        </p>
+      )}
       {result && (
         <Alert tone={result.success ? "success" : "error"}>
           <p>{result.message}</p>

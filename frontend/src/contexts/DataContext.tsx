@@ -46,6 +46,10 @@ type ImportResult = { added: number; duplicates: number; error: string | null };
 
 type DataContextValue = {
   data: SchoolData;
+  /** Verdadeiro enquanto os dados do professor logado ainda não chegaram da API. */
+  loading: boolean;
+  /** Verdadeiro depois que os dados do professor logado foram carregados ao menos uma vez. */
+  loaded: boolean;
   loadError: string | null;
   reload: () => Promise<void>;
   addClassroom: (input: Omit<Classroom, "id" | "teacherId">) => Result;
@@ -81,23 +85,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const userId = user?.id;
   const [data, dispatch] = useReducer(reducer, EMPTY_DATA);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // Professor cujos dados já foram carregados com sucesso.
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  const loaded = Boolean(userId) && loadedFor === userId;
+  const loading = Boolean(userId) && !loaded && !loadError;
 
   const reload = useCallback(async () => {
+    setLoadError(null);
     try {
       dispatch({ type: "hydrate", data: await fetchAll() });
-      setLoadError(null);
+      setLoadedFor(userId ?? null);
     } catch (error) {
       setLoadError(describeError(error));
     }
-  }, []);
+  }, [userId]);
 
   // Recarrega os dados sempre que o professor logado muda.
   useEffect(() => {
     let current = true;
     (userId ? fetchAll() : Promise.resolve(EMPTY_DATA))
-      .then((loaded) => {
+      .then((fetched) => {
         if (!current) return;
-        dispatch({ type: "hydrate", data: loaded });
+        dispatch({ type: "hydrate", data: fetched });
+        setLoadedFor(userId ?? null);
         setLoadError(null);
       })
       .catch((error) => {
@@ -157,6 +167,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       data,
+      loading,
+      loaded,
       loadError,
       reload,
       addClassroom,
@@ -166,7 +178,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       addDelivery,
       importRows,
     }),
-    [data, loadError, reload, addClassroom, saveStudent, addGrade, addAbsence, addDelivery, importRows],
+    [data, loading, loaded, loadError, reload, addClassroom, saveStudent, addGrade, addAbsence, addDelivery, importRows],
   );
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

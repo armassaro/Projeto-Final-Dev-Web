@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 export type FormErrors<T> = Partial<Record<keyof T, string>>;
@@ -11,6 +11,9 @@ export function useForm<T extends Record<string, string>>(
 ) {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<FormErrors<T>>({});
+  // Verdadeiro enquanto o envio (requisição à API) está em andamento.
+  const [submitting, setSubmitting] = useState(false);
+  const busy = useRef(false);
 
   function setField(field: keyof T, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -26,12 +29,23 @@ export function useForm<T extends Record<string, string>>(
     };
   }
 
-  function handleSubmit(onValid: (values: T) => void) {
-    return (event: FormEvent) => {
+  function handleSubmit(onValid: (values: T) => void | Promise<void>) {
+    return async (event: FormEvent) => {
       event.preventDefault();
+      // Ignora cliques repetidos enquanto o envio anterior não terminou.
+      if (busy.current) return;
       const found = validate(values);
       setErrors(found);
-      if (Object.values(found).every((message) => !message)) onValid(values);
+      if (!Object.values(found).every((message) => !message)) return;
+
+      busy.current = true;
+      setSubmitting(true);
+      try {
+        await onValid(values);
+      } finally {
+        busy.current = false;
+        setSubmitting(false);
+      }
     };
   }
 
@@ -40,5 +54,5 @@ export function useForm<T extends Record<string, string>>(
     setErrors({});
   }
 
-  return { values, bind, handleSubmit, reset };
+  return { values, bind, handleSubmit, reset, submitting };
 }

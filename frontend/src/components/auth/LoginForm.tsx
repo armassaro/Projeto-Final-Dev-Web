@@ -10,7 +10,7 @@ import { useForm } from "@/hooks/useForm";
 export function LoginForm() {
   const { login } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const { bind, handleSubmit } = useForm({ email: "", password: "" }, (values) => ({
+  const { bind, handleSubmit, submitting } = useForm({ email: "", password: "" }, (values) => ({
     email: values.email.trim() ? undefined : "Informe o e-mail.",
     password: values.password ? undefined : "Informe a senha.",
   }));
@@ -24,7 +24,7 @@ export function LoginForm() {
       {error && <Alert tone="error">{error}</Alert>}
       <TextField label="E-mail" type="email" autoComplete="email" {...bind("email")} />
       <TextField label="Senha" type="password" autoComplete="current-password" {...bind("password")} />
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full" loading={submitting} loadingText="Entrando...">
         Entrar
       </Button>
     </form>
